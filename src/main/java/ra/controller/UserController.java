@@ -99,8 +99,8 @@ public class UserController {
 
     @PostMapping("/signIn")
     public ResponseEntity<?> loginUser(@RequestBody UserLogin userLogin) {
-        Users users =userService.findUsersByUserName(userLogin.getUserName());
-        if (users.isStatusUser()){
+        Users users = userService.findUsersByUserName(userLogin.getUserName());
+        if (users.isStatusUser()) {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userLogin.getUserName(), userLogin.getPasswords())
             );
@@ -114,8 +114,8 @@ public class UserController {
             JwtResponse response = new JwtResponse(customUserDetail.getUserId(), customUserDetail.getFirstName(), customUserDetail.getLastName(), jwt, customUserDetail.getUsername(), customUserDetail.getEmail(),
                     customUserDetail.getAddress(), customUserDetail.getState(), customUserDetail.getCity(), customUserDetail.getPost(), customUserDetail.getPhone(), customUserDetail.getAvatar(), customUserDetail.getRanks(), listRoles, customUserDetail.getCarts().get(customUserDetail.getCarts().size() - 1));
             return ResponseEntity.ok(response);
-        }else {
-            return new ResponseEntity<>("tài khoản của bạn đang bị khoá",HttpStatus.BAD_REQUEST);
+        } else {
+            return new ResponseEntity<>("tài khoản của bạn đang bị khoá", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -142,6 +142,7 @@ public class UserController {
             return new ResponseEntity<>(data, HttpStatus.BAD_REQUEST);
         }
     }
+
     @DeleteMapping("/block_user/{userId}")
     @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
     public ResponseEntity<?> blockUser(@PathVariable int userId) {
@@ -161,17 +162,18 @@ public class UserController {
     // dang nhap voi gg
 
     @GetMapping("/login_with_google")
-    public RedirectView loginWithGoogle(){
+    public RedirectView loginWithGoogle() {
         return new RedirectView("/login/oauth2/code/google");
     }
+
     @GetMapping("/success/profile")
     public ResponseEntity<Map<String, Object>> getUserInfo(@AuthenticationPrincipal OAuth2User principal) {
         Map<String, Object> userAttributes = principal.getAttributes();
         String name = (String) userAttributes.get("name");
         String email = (String) userAttributes.get("email");
-        userAttributes.put("name",name);
-        userAttributes.put("email",email);
-        return new ResponseEntity<>(userAttributes,HttpStatus.OK);
+        userAttributes.put("name", name);
+        userAttributes.put("email", email);
+        return new ResponseEntity<>(userAttributes, HttpStatus.OK);
     }
 
     //    ------------------    ĐĂNG KÝ   ----------------------
@@ -186,7 +188,7 @@ public class UserController {
         if (!RegexValidate.checkRegexEmail(signupRequest.getEmail())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is invalid"));
         }
-        if (!RegexValidate.checkRegexPhone(signupRequest.getPhone())){
+        if (!RegexValidate.checkRegexPhone(signupRequest.getPhone())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Phone is invalid"));
         }
         if (!RegexValidate.checkRegexPassword(signupRequest.getPasswords())) {
@@ -268,6 +270,7 @@ public class UserController {
     public Users getUserById(@PathVariable("userId") int userId) {
         return userService.findById(userId);
     }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createUser(@RequestBody RegisterRequest signupRequest) {
@@ -329,7 +332,6 @@ public class UserController {
     }
 
 
-
     //    --------------------- ROLE : MODERATOR ----------------------------
     @GetMapping("getAllUserForModerator")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
@@ -360,7 +362,7 @@ public class UserController {
         if (!RegexValidate.checkRegexEmail(signupRequest.getEmail())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is invalid"));
         }
-        if (!RegexValidate.checkRegexPhone(signupRequest.getPhone())){
+        if (!RegexValidate.checkRegexPhone(signupRequest.getPhone())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Phone is invalid"));
         }
         if (!RegexValidate.checkRegexPassword(signupRequest.getPasswords())) {
@@ -406,6 +408,12 @@ public class UserController {
         if (userService.existsByEmail(registerRequest.getEmail())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already"));
         }
+        if (!RegexValidate.checkRegexEmail(registerRequest.getEmail())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is invalid"));
+        }
+        if (!RegexValidate.checkRegexPhone(registerRequest.getPhone())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Phone is invalid"));
+        }
         Users userUpdateUser = (Users) userService.findById(userId);
         userUpdateUser.setFirstName(registerRequest.getFirstName());
         userUpdateUser.setLastName(registerRequest.getLastName());
@@ -424,19 +432,23 @@ public class UserController {
     @PutMapping("changePassword")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR') or hasRole('USER')")
     public ResponseEntity<?> changePassword(@RequestBody ChangePassword changePassword) {
-//        USER dang dang nhap
-        CustomUserDetails usersChangePass = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Users users = userService.findUsersByUserName(usersChangePass.getUsername());
-//        thong tin request
-        String userName = changePassword.getUserName();
-        String oldPass = changePassword.getOldPass();
-        String newPass = changePassword.getNewPass();
+        if (!RegexValidate.checkRegexPassword(changePassword.getNewPass())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Please enter password contains a digit, a lower case letter, an upper case letter, a special character at least once and length at least eight places though"));
+        } else {
+            //        USER dang dang nhap
+            CustomUserDetails usersChangePass = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Users users = userService.findUsersByUserName(usersChangePass.getUsername());
+            //        thong tin request
+            String userName = changePassword.getUserName();
+            String oldPass = changePassword.getOldPass();
+            String newPass = changePassword.getNewPass();
 
-        if (usersChangePass.getUsername().equals(userName) && BCrypt.checkpw(oldPass, usersChangePass.getPassword())) {
-            users.setPasswords(encoder.encode(newPass));
-            userService.saveOrUpdate(users);
+            if (usersChangePass.getUsername().equals(userName) && BCrypt.checkpw(oldPass, usersChangePass.getPassword())) {
+                users.setPasswords(encoder.encode(newPass));
+                userService.saveOrUpdate(users);
+            }
+            return ResponseEntity.ok(new MessageResponse("Change password successfully!"));
         }
-        return ResponseEntity.ok(new MessageResponse("Change password successfully!"));
     }
 
     @PutMapping("addWishList/{bookId}")

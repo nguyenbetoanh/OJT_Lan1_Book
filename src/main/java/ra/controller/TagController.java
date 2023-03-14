@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ra.dto.request.TagRequest;
 import ra.model.entity.Tag;
@@ -23,6 +24,7 @@ public class TagController {
     private TagService tagService;
 
     @GetMapping("/get_paging_and_sort")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getPagingAndSort(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -68,6 +70,7 @@ public class TagController {
     }
 
     @PostMapping("/creat_new_tag")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> creatNewTag(@RequestBody TagRequest request) {
         try {
             Tag result = tagService.saveOrUpdate(tagService.mapTagRequestToTag(request));
@@ -78,6 +81,7 @@ public class TagController {
     }
 
     @PutMapping("/update/{tagId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> update(@PathVariable int tagId, @RequestBody Tag tag) {
         try {
             Tag tagUpdate = tagService.findById(tagId);
@@ -90,6 +94,7 @@ public class TagController {
         }
     }
     @PatchMapping("/delete/{tagId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> delete(@PathVariable int tagId){
         try {
             Tag tag= tagService.findById(tagId);
