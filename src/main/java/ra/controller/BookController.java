@@ -5,11 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
 import ra.dto.response.BookResponse;
+import ra.model.entity.Author;
 import ra.model.entity.Book;
 import ra.model.entity.ResponseObject;
 
@@ -57,20 +59,22 @@ public class BookController {
     @PutMapping("/{bookId}")
     ResponseEntity<ResponseObject> saveOrUpdate(@RequestBody Book book, @PathVariable int bookId) {
         try {
-            Book result = bookServiceImp.getById(bookId);
-            result.setBookName(book.getBookName());
-            result.setDescriptions(book.getDescriptions());
-            result.setBookTitle(book.getBookTitle());
-            result.setIsbn(book.getIsbn());
-            result.setEditionLanguage(book.getEditionLanguage());
-            result.setDatePublished(book.getDatePublished());
-            result.setPublisher(book.getPublisher());
-            result.setImportPrice(book.getImportPrice());
-            result.setExportPrice(book.getExportPrice());
-            result.setQuantity(book.getQuantity());
-            result.setSale(book.getSale());
-            result.setBookStatus(book.isBookStatus());
-            result.setBookStatus(true);
+            Book bookUpdate = bookServiceImp.getById(bookId);
+            bookUpdate.setBookName(book.getBookName());
+            bookUpdate.setDescriptions(book.getDescriptions());
+            bookUpdate.setBookTitle(book.getBookTitle());
+            bookUpdate.setIsbn(book.getIsbn());
+            bookUpdate.setEditionLanguage(book.getEditionLanguage());
+            bookUpdate.setDatePublished(book.getDatePublished());
+            bookUpdate.setPublisher(book.getPublisher());
+            bookUpdate.setImportPrice(book.getImportPrice());
+            bookUpdate.setExportPrice(book.getExportPrice());
+            bookUpdate.setQuantity(book.getQuantity());
+            bookUpdate.setSale(book.getSale());
+            bookUpdate.setBookStatus(book.isBookStatus());
+            bookUpdate.setBookStatus(true);
+            Book save = bookServiceImp.saveOrUpdate(bookUpdate);
+            BookResponse result = bookServiceImp.mapBookToBookResponse(save);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject("ok", "Cập nhật thành công book với id là " + bookId, result));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseObject("false", "không thể cập nhật book với id là  " + bookId, ""));
@@ -80,33 +84,52 @@ public class BookController {
     @DeleteMapping("/{bookId}")
     ResponseEntity<ResponseObject> deleteById(@PathVariable int bookId) {
         try {
-            bookServiceImp.deleteById(bookId);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject("ok", "Xóa thành công book  với id là " + bookId, ""));
+            Book book = bookServiceImp.getById(bookId);
+            book.setBookStatus(false);
+            Book result = bookServiceImp.saveOrUpdate(book);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject("ok", "Xóa thành công book  với id là " + bookId, result));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseObject("false", "không thể xóa  book với id là " + bookId, ""));
         }
     }
 
     @GetMapping("/search")
-
-    public List<Book> searchName(@RequestParam("bookName") String bookName) {
-        return bookServiceImp.searchName(bookName);
-    }
-
-    @GetMapping("/sortByName")
-    public ResponseEntity<List<Book>> sortBookByName(@RequestParam("direction") String direction) {
-        List<Book> listBook = bookServiceImp.sortByName(direction);
-        return new ResponseEntity<>(listBook, HttpStatus.OK);
-    }
-
-    @GetMapping("/getPagging")
-    public ResponseEntity<Map<String, Object>> getPagging(
+    public ResponseEntity<Map<String, Object>> searchByName(
+            @RequestParam String searchName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "3") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Map<String, Object> data = new HashMap<>();
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Book> bookPage = bookServiceImp.searchName(searchName, pageable);
+            for (Book book : bookPage) {
+            }
+            data.put("authors", bookPage.getContent());
+            data.put("total", bookPage.getSize());
+            data.put("totalAuthors", bookPage.getTotalElements());
+            data.put("totalPage", bookPage.getTotalPages());
+            return new ResponseEntity<>(data, HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(data, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/get_pagging_and_sortBy")
+    public ResponseEntity<Map<String, Object>> getPagging(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size,
+            @RequestParam String direction,
+            @RequestParam String sortBy) {
+        Sort.Order order = null;
+        if (direction.equals("asc")) {
+            order = new Sort.Order(Sort.Direction.ASC, sortBy);
+        } else if (direction.equals("des")) {
+            order = new Sort.Order(Sort.Direction.DESC, sortBy);
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(order));
         Page<Book> pageBook = bookServiceImp.getPagging(pageable);
         Map<String, Object> data = new HashMap<>();
-        data.put("catalog", pageBook.getContent());
+        data.put("books", pageBook.getContent());
         data.put("total", pageBook.getSize());
         data.put("totalItems", pageBook.getTotalElements());
         data.put("totalPages", pageBook.getTotalPages());
@@ -116,15 +139,15 @@ public class BookController {
     @GetMapping("/get_best_star")
     public ResponseEntity<?> getBestStar() {
         List<Book> bookList = bookServiceImp.getAll();
-        float max= 0;
-        BookResponse bookResponse= new BookResponse();
+        float max = 0;
+        BookResponse bookResponse = new BookResponse();
         for (Book book : bookList) {
-            BookResponse response=bookServiceImp.mapBookToBookResponse(book);
-           if (response.getAvgStar()>max){
-               max=response.getAvgStar();
-               bookResponse=response;
-           }
+            BookResponse response = bookServiceImp.mapBookToBookResponse(book);
+            if (response.getAvgStar() > max) {
+                max = response.getAvgStar();
+                bookResponse = response;
+            }
         }
-        return new ResponseEntity<>(bookResponse,HttpStatus.OK);
-        }
+        return new ResponseEntity<>(bookResponse, HttpStatus.OK);
+    }
 }

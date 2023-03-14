@@ -14,7 +14,7 @@ public interface BookService {
     Book getById(int bookId);
     void deleteById(int bookId);
     Book saveOrUpdate(Book book);
-    List<Book> searchName(String bookName);
+    Page<Book> searchName(String bookName,Pageable pageable);
     List<Book> sortByName(String direction);
     Page<Book> getPagging(Pageable pageable);
     List<Book> getAllWishList(int userId);

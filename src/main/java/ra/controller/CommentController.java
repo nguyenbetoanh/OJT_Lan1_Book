@@ -43,11 +43,19 @@ public class CommentController {
         return commentService.findById(commentId);
     }
 
-    @GetMapping("getListCommentAndPaging")
+    @GetMapping("get_paging_and_sort")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getPaging(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size) {
+            @RequestParam(defaultValue = "3") int size,
+            @RequestParam String direction,
+            @RequestParam String sortBy) {
+        Sort.Order order = null;
+        if (direction.equals("asc")) {
+            order = new Sort.Order(Sort.Direction.ASC, sortBy);
+        } else if (direction.equals("des")) {
+            order = new Sort.Order(Sort.Direction.DESC, sortBy);
+        }
         Pageable pageable = PageRequest.of(page, size);
         Page<Comment> pageListComment = commentService.getAllList(pageable);
         Map<String, Object> data = new HashMap<>();
@@ -62,7 +70,7 @@ public class CommentController {
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 
-    @PutMapping("confirmComment/{commentId}")
+    @PutMapping("confirm_comment/{commentId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> ConfirmComment(@PathVariable("commentId") int commentId, @RequestBody CommentRequest commentRequest) {
         Comment commentConfirm = commentService.findById(commentId);
@@ -78,7 +86,6 @@ public class CommentController {
                 commentService.saveOrUpdate(cmPa);
             }
         }
-
         List<Comment> listChildUpdate = commentService.findByCommentIdIn(commentRequest.getListCommentId());
         if (listChild != null) {
             if (commentRequest.isCommentStatus()) {
@@ -120,32 +127,6 @@ public class CommentController {
         commentService.saveOrUpdate(commentDelete);
     }
 
-    @GetMapping("getCommentPagingAndSortById")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
-    public ResponseEntity<Map<String, Object>> getPagingAndSortingById(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size,
-            @RequestParam("direction") String direction) {
-        Sort.Order order = null;
-        if (direction.equals("asc")) {
-            order = new Sort.Order(Sort.Direction.ASC, "commentId");
-        } else if (direction.equals("des")) {
-            order = new Sort.Order(Sort.Direction.DESC, "commentId");
-        }
-        Pageable pageable = PageRequest.of(page, size, Sort.by(order));
-        Page<Comment> pageComment = commentService.getAllList(pageable);
-        Map<String, Object> data = new HashMap<>();
-//        Dữ liệu trả về trên 1 trang
-        data.put("comments", pageComment.getContent());
-//        Tổng bản ghi trên 1 trang
-        data.put("total", pageComment.getSize());
-//        Tổng dữ liệu
-        data.put("totalComments", pageComment.getTotalElements());
-//        Tổng số trang
-        data.put("totalPage", pageComment.getTotalPages());
-        return new ResponseEntity<>(data, HttpStatus.OK);
-    }
-
     @GetMapping("searchCommentByBookName")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getListCommentSearchByBookNameAndPaging(
@@ -170,7 +151,7 @@ public class CommentController {
         }
     }
 
-    @GetMapping("searchCommentByUserName")
+    @GetMapping("search_By_UserName")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getListCommentSearchByUserNameAndPaging(
             @RequestParam("searchName") String searchName,
@@ -218,9 +199,8 @@ public class CommentController {
                 commentNew.setBook(book);
                 commentNew.setCommentParentId(comment.getCommentParentId());
                 commentNew.setCommentStatus(false);
-                commentService.saveOrUpdate(commentNew);
-
-                return ResponseEntity.ok().body("Comment success");
+                Comment result= commentService.saveOrUpdate(commentNew);
+                return new ResponseEntity<>(result,HttpStatus.OK);
             }
         }
         return ResponseEntity.badRequest().body("Comment failed");

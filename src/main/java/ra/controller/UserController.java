@@ -35,7 +35,6 @@ import ra.model.service.UserService;
 import ra.regex.RegexValidate;
 import ra.security.CustomUserDetails;
 
-import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,7 +51,6 @@ public class UserController {
     private RoleService roleService;
     private BookService bookService;
     private CartService cartService;
-    private OAuth2UserService oAuth2UserService;
 
     @GetMapping("/getAllByFilter")
     @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
@@ -101,19 +99,24 @@ public class UserController {
 
     @PostMapping("/signIn")
     public ResponseEntity<?> loginUser(@RequestBody UserLogin userLogin) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userLogin.getUserName(), userLogin.getPasswords())
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        CustomUserDetails customUserDetail = (CustomUserDetails) authentication.getPrincipal();
-        //Sinh JWT tra ve client
-        String jwt = tokenProvider.generateToken(customUserDetail);
-        //Lay cac quyen cua user
-        List<String> listRoles = customUserDetail.getAuthorities().stream()
-                .map(item -> item.getAuthority()).collect(Collectors.toList());
-        JwtResponse response = new JwtResponse(customUserDetail.getUserId(), customUserDetail.getFirstName(), customUserDetail.getLastName(), jwt, customUserDetail.getUsername(), customUserDetail.getEmail(),
-                customUserDetail.getAddress(), customUserDetail.getState(), customUserDetail.getCity(), customUserDetail.getPost(), customUserDetail.getPhone(), customUserDetail.getAvatar(), customUserDetail.getRanks(), listRoles, customUserDetail.getCarts().get(customUserDetail.getCarts().size() - 1));
-        return ResponseEntity.ok(response);
+        Users users =userService.findUsersByUserName(userLogin.getUserName());
+        if (users.isStatusUser()){
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(userLogin.getUserName(), userLogin.getPasswords())
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            CustomUserDetails customUserDetail = (CustomUserDetails) authentication.getPrincipal();
+            //Sinh JWT tra ve client
+            String jwt = tokenProvider.generateToken(customUserDetail);
+            //Lay cac quyen cua user
+            List<String> listRoles = customUserDetail.getAuthorities().stream()
+                    .map(item -> item.getAuthority()).collect(Collectors.toList());
+            JwtResponse response = new JwtResponse(customUserDetail.getUserId(), customUserDetail.getFirstName(), customUserDetail.getLastName(), jwt, customUserDetail.getUsername(), customUserDetail.getEmail(),
+                    customUserDetail.getAddress(), customUserDetail.getState(), customUserDetail.getCity(), customUserDetail.getPost(), customUserDetail.getPhone(), customUserDetail.getAvatar(), customUserDetail.getRanks(), listRoles, customUserDetail.getCarts().get(customUserDetail.getCarts().size() - 1));
+            return ResponseEntity.ok(response);
+        }else {
+            return new ResponseEntity<>("tài khoản của bạn đang bị khoá",HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/search_by_userName")
@@ -140,6 +143,7 @@ public class UserController {
         }
     }
     @DeleteMapping("/block_user/{userId}")
+    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
     public ResponseEntity<?> blockUser(@PathVariable int userId) {
         try {
             CustomUserDetails customUserDetail = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -260,18 +264,10 @@ public class UserController {
 
 
     //    -------------------   ROLE: ADMIN   -------------------------
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<Users> getAllUser() {
-        return userService.findAll();
-    }
-
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
     public Users getUserById(@PathVariable("userId") int userId) {
         return userService.findById(userId);
     }
-
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createUser(@RequestBody RegisterRequest signupRequest) {
@@ -425,7 +421,7 @@ public class UserController {
         return ResponseEntity.ok(new MessageResponse("Update successfully!"));
     }
 
-    @PostMapping("changePassword")
+    @PutMapping("changePassword")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR') or hasRole('USER')")
     public ResponseEntity<?> changePassword(@RequestBody ChangePassword changePassword) {
 //        USER dang dang nhap
