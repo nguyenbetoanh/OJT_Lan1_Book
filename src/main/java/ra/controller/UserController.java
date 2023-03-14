@@ -487,7 +487,7 @@ public class UserController {
             displayBook.setSale(pro.getSale());
             displayBook.setExportPrice(pro.getExportPrice());
             displayBook.setImportPrice(pro.getImportPrice());
-            displayBook.setCategory(pro.getCatalog());
+            displayBook.setCategory(pro.getCategory());
             list.add(displayBook);
         }
         return ResponseEntity.ok(list);

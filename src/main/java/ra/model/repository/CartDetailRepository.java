@@ -19,4 +19,5 @@ public interface CartDetailRepository extends JpaRepository<CartDetail,Integer> 
     List<CartDetail> findByCartsIn(List<Carts> listCart);
 
 
+
 }

@@ -6,4 +6,5 @@ import ra.model.entity.Star;
 
 @Repository
 public interface StarRepository extends JpaRepository<Star,Integer> {
+    Star findByBook_BookIdAndUsers_UserId(int bookId, int userId);
 }

@@ -9,12 +9,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
+import ra.dto.response.BookResponse;
 import ra.model.entity.Book;
 import ra.model.entity.ResponseObject;
 
 import ra.model.serviceImple.BookServiceImp;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,7 @@ import java.util.Map;
 public class BookController {
     @Autowired
     private BookServiceImp bookServiceImp;
+
     @GetMapping
     public List<Book> getAll() {
         return bookServiceImp.getAll();
@@ -109,4 +112,19 @@ public class BookController {
         data.put("totalPages", pageBook.getTotalPages());
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
+
+    @GetMapping("/get_best_star")
+    public ResponseEntity<?> getBestStar() {
+        List<Book> bookList = bookServiceImp.getAll();
+        float max= 0;
+        BookResponse bookResponse= new BookResponse();
+        for (Book book : bookList) {
+            BookResponse response=bookServiceImp.mapBookToBookResponse(book);
+           if (response.getAvgStar()>max){
+               max=response.getAvgStar();
+               bookResponse=response;
+           }
+        }
+        return new ResponseEntity<>(bookResponse,HttpStatus.OK);
+        }
 }

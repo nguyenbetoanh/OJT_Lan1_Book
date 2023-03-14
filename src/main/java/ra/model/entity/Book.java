@@ -41,7 +41,7 @@ public class Book {
     private boolean bookStatus;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "CatalogId")
-    private Category catalog;
+    private Category category;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "authorId", referencedColumnName = "authorId")
     private Author author;

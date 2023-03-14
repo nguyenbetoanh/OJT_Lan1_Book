@@ -46,11 +46,18 @@ public class StarServiceImple implements StarService {
     }
 
     @Override
-    public Star mapRequestToStar(StarRequest request) {
+    public Star mapRequestToStar(Integer userId,StarRequest request) {
         Book book= bookService.getById(request.getBookId());
+        Users users=userService.findById(userId);
         Star star = new Star();
         star.setStarPoint(request.getStarPoint());
+        star.setUsers(users);
         star.setBook(book);
         return star;
+    }
+
+    @Override
+    public Star findByBookIdAndUserId(Integer bookId, Integer userId) {
+        return repository.findByBook_BookIdAndUsers_UserId(bookId,userId);
     }
 }
