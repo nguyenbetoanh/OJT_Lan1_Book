@@ -328,18 +328,6 @@ public class UserController {
         return ResponseEntity.ok(new MessageResponse("Update successfully!"));
     }
 
-    @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
-    public ResponseEntity<?> deleteUser(@PathVariable("userId") int userId) {
-        try {
-            Users userDelete = (Users) userService.findById(userId);
-            userDelete.setStatusUser(false);
-            userService.saveOrUpdate(userDelete);
-            return ResponseEntity.ok().body("Delete success");
-        } catch (Exception ex) {
-            return ResponseEntity.badRequest().body("Delete fail");
-        }
-    }
 
 
     //    --------------------- ROLE : MODERATOR ----------------------------
