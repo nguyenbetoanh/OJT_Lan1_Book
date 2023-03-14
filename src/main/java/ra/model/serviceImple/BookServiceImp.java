@@ -41,8 +41,8 @@ public class BookServiceImp implements BookService {
     }
 
     @Override
-    public List<Book> searchName(String bookName) {
-        return bookRepository.findByBookNameContaining(bookName);
+    public Page<Book> searchName(String bookName,Pageable pageable) {
+        return bookRepository.findByBookNameContaining(bookName,pageable);
     }
 
     @Override
@@ -90,12 +90,16 @@ public class BookServiceImp implements BookService {
         response.setTagList(book.getTagList());
         response.setListComment(book.getListComment());
         response.setCountLike(book.getListLikeBook().size());
-        List<Star> starList = book.getStarList();
-        int sum = 0;
-        for (Star star : starList) {
-              sum+= star.getStarPoint();
+        if (book.getStarList().size()==0){
+            response.setAvgStar(0);
+        }else {
+            List<Star> starList = book.getStarList();
+            int sum = 0;
+            for (Star star : starList) {
+                sum+= star.getStarPoint();
+            }
+            response.setAvgStar(sum/book.getStarList().size());
         }
-        response.setAvgStar(sum/book.getStarList().size());
         return response;
     }
 

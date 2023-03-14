@@ -58,32 +58,16 @@ public class AuthorController {
 
     @DeleteMapping("/{authorId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
-    public void deleteAuthor(@PathVariable("authorId") int authorId) {
-        Author authorDelete = authorService.findById(authorId);
-        authorDelete.setAuthorStatus(false);
-        authorService.saveOrUpdate(authorDelete);
+    public ResponseEntity<?> deleteAuthor(@PathVariable("authorId") int authorId) {
+        try {
+            Author authorDelete = authorService.findById(authorId);
+            authorDelete.setAuthorStatus(false);
+             authorService.saveOrUpdate(authorDelete);
+            return new ResponseEntity<>(authorService.saveOrUpdate(authorDelete),HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>("có lỗi trong quá trình sử lí ",HttpStatus.BAD_REQUEST);
+        }
     }
-
-
-    @GetMapping("getListAuthorPaging")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
-    public ResponseEntity<Map<String, Object>> getPaging(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Author> pageListAuthor = authorService.getAllList(pageable);
-        Map<String, Object> data = new HashMap<>();
-//        Dữ liệu trả về trên 1 trang
-        data.put("authors",pageListAuthor.getContent());
-//        Tổng bản ghi trên 1 trang
-        data.put("total", pageListAuthor.getSize());
-//        Tổng dữ liệu
-        data.put("totalAuthors", pageListAuthor.getTotalElements());
-//        Tổng số trang
-        data.put("totalPage", pageListAuthor.getTotalPages());
-        return new ResponseEntity<>(data, HttpStatus.OK);
-    }
-
     @GetMapping("search")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getListAuthorSearchAndPaging(
@@ -107,17 +91,18 @@ public class AuthorController {
             return new ResponseEntity<>(data,HttpStatus.BAD_REQUEST);
         }
     }
-    @GetMapping("getAuthorPagingAndSortById")
+    @GetMapping("get_paging_and_sortBy")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getPagingAndSortingById(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "3") int size,
-            @RequestParam("direction") String direction) {
+            @RequestParam String direction,
+            @RequestParam String sortBy) {
         Sort.Order order = null;
         if (direction.equals("asc")){
-            order = new Sort.Order(Sort.Direction.ASC,"authorId");
+            order = new Sort.Order(Sort.Direction.ASC,sortBy);
         } else if (direction.equals("des")){
-            order = new Sort.Order(Sort.Direction.DESC,"authorId");
+            order = new Sort.Order(Sort.Direction.DESC,sortBy);
         }
         Pageable pageable = PageRequest.of(page, size,Sort.by(order));
         Page<Author> pageAuthor = authorService.getAllList(pageable);
@@ -133,30 +118,6 @@ public class AuthorController {
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 
-    @GetMapping("getPagingAndSortByName")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
-    public ResponseEntity<Map<String, Object>> getPagingAndSortingByName(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size,
-            @RequestParam("direction") String direction) {
-        Sort.Order order = null;
-        if (direction.equals("asc")){
-            order = new Sort.Order(Sort.Direction.ASC,"authorId");
-        } else if (direction.equals("des")){
-            order = new Sort.Order(Sort.Direction.DESC,"authorId");
-        }
-        Pageable pageable = PageRequest.of(page, size,Sort.by(order));
-        Page<Author> pageAuthor = authorService.getAllList(pageable);
-        Map<String, Object> data = new HashMap<>();
-//        Dữ liệu trả về trên 1 trang
-        data.put("authors",pageAuthor.getContent());
-//        Tổng bản ghi trên 1 trang
-        data.put("total", pageAuthor.getSize());
-//        Tổng dữ liệu
-        data.put("totalAuthors", pageAuthor.getTotalElements());
-//        Tổng số trang
-        data.put("totalPage", pageAuthor.getTotalPages());
-        return new ResponseEntity<>(data, HttpStatus.OK);
-    }
+
 
 }

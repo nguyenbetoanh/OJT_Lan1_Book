@@ -218,9 +218,8 @@ public class CommentController {
                 commentNew.setBook(book);
                 commentNew.setCommentParentId(comment.getCommentParentId());
                 commentNew.setCommentStatus(false);
-                commentService.saveOrUpdate(commentNew);
-
-                return ResponseEntity.ok().body("Comment success");
+                Comment result= commentService.saveOrUpdate(commentNew);
+                return new ResponseEntity<>(result,HttpStatus.OK);
             }
         }
         return ResponseEntity.badRequest().body("Comment failed");
