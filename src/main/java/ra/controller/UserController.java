@@ -332,18 +332,6 @@ public class UserController {
         return ResponseEntity.ok(new MessageResponse("Update successfully!"));
     }
 
-    @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
-    public ResponseEntity<?> deleteUser(@PathVariable("userId") int userId) {
-        try {
-            Users userDelete = (Users) userService.findById(userId);
-            userDelete.setStatusUser(false);
-            userService.saveOrUpdate(userDelete);
-            return ResponseEntity.ok().body("Delete success");
-        } catch (Exception ex) {
-            return ResponseEntity.badRequest().body("Delete fail");
-        }
-    }
 
 
     //    --------------------- ROLE : MODERATOR ----------------------------
@@ -372,6 +360,15 @@ public class UserController {
         }
         if (userService.existsByEmail(signupRequest.getEmail())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already"));
+        }
+        if (!RegexValidate.checkRegexEmail(signupRequest.getEmail())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is invalid"));
+        }
+        if (!RegexValidate.checkRegexPhone(signupRequest.getPhone())){
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Phone is invalid"));
+        }
+        if (!RegexValidate.checkRegexPassword(signupRequest.getPasswords())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Please enter password contains a digit, a lower case letter, an upper case letter, a special character at least once and length at least eight places though"));
         }
         Users user = new Users();
         user.setUserName(signupRequest.getUserName());
