@@ -19,7 +19,7 @@ public class Category {
     private String catalogName;
     @Column(name = "CatalogStatus",columnDefinition = "nvarchar(100)")
     private boolean catalogStatus;
-//    @JsonIgnore
-//    @OneToMany(mappedBy = "Category")
-//    List<Book> listBook = new ArrayList<>();
+    @OneToMany(mappedBy = "category")
+    @JsonIgnore
+    List<Book> listBook = new ArrayList<>();
 }

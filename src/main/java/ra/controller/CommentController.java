@@ -205,7 +205,9 @@ public class CommentController {
         List<Users> usersList = new ArrayList<>();
         List<CartDetail> listCartDetail = cartDetailService.findByBook_BookId(book.getBookId());
         for (CartDetail cd : listCartDetail) {
-            usersList.add(cd.getCarts().getUsers());
+            if (cd.getCarts().getCartStatus()==1){
+                usersList.add(cd.getCarts().getUsers());
+            }
         }
 
         for (Users user : usersList) {
@@ -221,9 +223,7 @@ public class CommentController {
                 return ResponseEntity.ok().body("Comment success");
             }
         }
-
         return ResponseEntity.badRequest().body("Comment failed");
-
     }
 
     @PutMapping("/{commentId}")

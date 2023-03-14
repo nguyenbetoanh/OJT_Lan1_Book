@@ -8,10 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ra.dto.request.StarRequest;
 import ra.model.entity.*;
-import ra.model.service.BookService;
-import ra.model.service.CartDetailService;
-import ra.model.service.StarService;
-import ra.model.service.UserService;
+import ra.model.service.*;
 import ra.security.CustomUserDetails;
 
 import java.util.ArrayList;
@@ -22,50 +19,42 @@ import java.util.List;
 @RequestMapping("/api/v1/star")
 @AllArgsConstructor
 public class StarController {
-    @Autowired
     private StarService starService;
-    @Autowired
     private UserService userService;
-    @Autowired
     private BookService bookService;
-    @Autowired
     private CartDetailService cartDetailService;
+    private CartService cartService;
 
-    @PostMapping("/creat_new_star")
+    @PostMapping("/vote_star")
     public ResponseEntity<?> creatNewStar(@RequestBody StarRequest request) {
         try {
-            Star star = starService.mapRequestToStar(request);
             CustomUserDetails usersChangePass = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             Users users = userService.findUsersByUserName(usersChangePass.getUsername());
-            Book book = bookService.getById(request.getBookId());
-            List<Users> usersList = new ArrayList<>();
-            List<CartDetail> listCartDetail = cartDetailService.findByBook_BookId(book.getBookId());
-            for (CartDetail cd : listCartDetail) {
-                usersList.add(cd.getCarts().getUsers());
-            }
-            boolean check =false;
-            for (Users user : usersList) {
-                if (user.getUserId()==users.getUserId()){
-                    check =true;
+            Star oldStar = starService.findByBookIdAndUserId(request.getBookId(), users.getUserId());
+            if (oldStar != null) {
+                oldStar.setStarPoint(request.getStarPoint());
+                Star result = starService.saveOrUpdate(oldStar);
+                return new ResponseEntity<>(result, HttpStatus.OK);
+            } else {
+                List<Carts> carts = cartService.findByUsers_UserIdAndCartStatus(users.getUserId(), 1);
+                List<CartDetail> listCartDetail = cartDetailService.findByCartsIn(carts);
+                boolean check = false;
+                for (CartDetail catDt : listCartDetail) {
+                    if (catDt.getBook().getBookId()== request.getBookId()){
+                        check= true;
+                        break;
+                    }
+                }
+                if (check){
+                    Star star = starService.mapRequestToStar(users.getUserId(), request);
+                    Star result = starService.saveOrUpdate(star);
+                    return new ResponseEntity<>(result, HttpStatus.OK);
+                }else {
+                    return new ResponseEntity<>( "Mua hang truoc khi danh gia",HttpStatus.BAD_REQUEST);
                 }
             }
-            Star starNew = new Star();
-            if (check){
-                starNew.setStarPoint(request.getStarPoint());
-                starNew.setUsers(users);
-                starNew.setBook(book);
-                starService.saveOrUpdate(starNew);
-            }
-            Star result=  starService.saveOrUpdate(starNew);
-            return new ResponseEntity<>(result, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
-
-    @GetMapping("/get_best_star")
-    public ResponseEntity<?> getBestStarByProductId() {
-        return null;
-    }
-
 }

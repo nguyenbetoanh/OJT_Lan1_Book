@@ -16,4 +16,5 @@ public interface CartRepository extends JpaRepository<Carts,Integer>{
     Page<Carts> findByCartStatusNotIn(List<Integer> cartStatus, Pageable pageable);
 
     List<Carts> findByCreatDateBetween(LocalDate startDate, LocalDate endDate);
+    List<Carts>findByUsers_UserIdAndCartStatus(Integer userId,Integer cartStatus);
 }

@@ -15,4 +15,5 @@ public interface BookRepository extends JpaRepository<Book,Integer> {
     List<Book> getAllWishList(@Param("uId") int userId);
 
     List<Book> findByCartDetailsIn(List<CartDetail> listCartDetail);
+    List<Book>findByCategory_CatalogId(Integer catId);
 }
