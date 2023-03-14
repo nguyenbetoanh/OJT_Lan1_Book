@@ -26,7 +26,7 @@ public class AuthorController {
     private AuthorService authorService;
 
     @GetMapping
-    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public List<Author> getAllAuthor() {
         return authorService.findAll();
     }
@@ -69,7 +69,6 @@ public class AuthorController {
         }
     }
     @GetMapping("search")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getListAuthorSearchAndPaging(
             @RequestParam("searchName") String searchName,
             @RequestParam(defaultValue = "0") int page,
@@ -92,8 +91,7 @@ public class AuthorController {
         }
     }
     @GetMapping("get_paging_and_sortBy")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
-    public ResponseEntity<Map<String, Object>> getPagingAndSortingById(
+    public ResponseEntity<Map<String, Object>> getPagingAndSortingBy(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "3") int size,
             @RequestParam String direction,
@@ -117,7 +115,5 @@ public class AuthorController {
         data.put("totalPage", pageAuthor.getTotalPages());
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
-
-
 
 }

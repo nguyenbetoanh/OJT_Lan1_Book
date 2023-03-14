@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ra.model.entity.Book;
 import ra.model.entity.Category;
@@ -28,11 +29,13 @@ public class CategoryController {
     private BookService bookService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public List<Category> getAll() {
         return categoryServiceImp.getAll();
     }
 
     @GetMapping("/{catalogId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     ResponseEntity<ResponseObject> findById(@PathVariable int catalogId) {
         try {
             Category foundStudent = categoryServiceImp.getById(catalogId);
@@ -43,6 +46,7 @@ public class CategoryController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     ResponseEntity<ResponseObject> createCategory(@RequestBody Category category) {
         try {
             category.setCatalogStatus(true);
@@ -54,6 +58,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{catalogId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     ResponseEntity<ResponseObject> saveOrUpdate(@RequestBody Category category, @PathVariable int catalogId) {
         try {
             Category categoryUpdate = categoryServiceImp.getById(catalogId);
@@ -67,6 +72,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{catalogId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     ResponseEntity<ResponseObject> deleteById(@PathVariable int catalogId) {
         try {
             Category category = categoryServiceImp.getById(catalogId);
@@ -84,7 +90,6 @@ public class CategoryController {
     }
 
         @GetMapping("/search")
-
     public List<Category> searchNameOrId(@RequestParam("catalogName") String catalogName) {
         return categoryServiceImp.searchName(catalogName);
     }

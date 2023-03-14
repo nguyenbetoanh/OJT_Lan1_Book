@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ra.dto.response.BookResponse;
 import ra.model.entity.Author;
@@ -32,11 +33,13 @@ public class BookController {
     private BookServiceImp bookServiceImp;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public List<Book> getAll() {
         return bookServiceImp.getAll();
     }
 
     @GetMapping("/{bookId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     ResponseEntity<ResponseObject> findById(@PathVariable int bookId) {
         try {
             Book result = bookServiceImp.getById(bookId);
@@ -47,6 +50,7 @@ public class BookController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     ResponseEntity<ResponseObject> createBook(@RequestBody Book book) {
         try {
             Book result = bookServiceImp.saveOrUpdate(book);
@@ -57,6 +61,7 @@ public class BookController {
     }
 
     @PutMapping("/{bookId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     ResponseEntity<ResponseObject> saveOrUpdate(@RequestBody Book book, @PathVariable int bookId) {
         try {
             Book bookUpdate = bookServiceImp.getById(bookId);
@@ -82,6 +87,7 @@ public class BookController {
     }
 
     @DeleteMapping("/{bookId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     ResponseEntity<ResponseObject> deleteById(@PathVariable int bookId) {
         try {
             Book book = bookServiceImp.getById(bookId);
@@ -137,6 +143,7 @@ public class BookController {
     }
 
     @GetMapping("/get_best_star")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> getBestStar() {
         List<Book> bookList = bookServiceImp.getAll();
         float max = 0;

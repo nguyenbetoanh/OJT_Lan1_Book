@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ra.dto.request.CartConfirm;
@@ -39,6 +40,7 @@ public class CartController {
     private CartDetailService cartDetailService;
 
     @GetMapping("/get_paging_and_sort")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getPagingAndSort(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -65,6 +67,7 @@ public class CartController {
     }
 
     @GetMapping("/search_by_name")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> searchByName(
             @RequestParam String searchName,
             @RequestParam(defaultValue = "0") int page,
@@ -84,6 +87,7 @@ public class CartController {
     }
 
     @PutMapping("/add_to_cart")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> addToCart(@RequestBody CartDetailRequest cartDetailRequest, @RequestParam String action) {
         CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             CartDetail cartDetail = null;
@@ -123,6 +127,7 @@ public class CartController {
     }
 
     @DeleteMapping("/delete_cart_detail/{detailId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> deleteCartDetail(@PathVariable int detailId) {
         try {
             cartDetailService.deleteByCartDetailId(detailId);
@@ -134,6 +139,7 @@ public class CartController {
 
 
     @PutMapping("/check_out")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR') or hasRole('USER')")
     public ResponseEntity<?> checkout(@RequestBody CartConfirm confirm) {
         CustomUserDetails customUserDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<Carts> cartsList=cartService.findByUsers_UserIdAndCartStatus(customUserDetails.getUserId(),0);
@@ -172,7 +178,7 @@ public class CartController {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
         }else {
-            return new ResponseEntity<>("Có lỗi trong quá trình sử lý",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Có lỗi trong quá trình xử lý",HttpStatus.BAD_REQUEST);
         }
     }
 }

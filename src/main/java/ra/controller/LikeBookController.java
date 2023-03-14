@@ -28,6 +28,7 @@ public class LikeBookController {
     private BookService bookService;
 
     @PostMapping()
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR') or hasRole('USER')")
     public ResponseEntity<?> clickLikeBook(@RequestBody Book book) {
         CustomUserDetails usersChangePass = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Users users = userService.findUsersByUserName(usersChangePass.getUsername());
