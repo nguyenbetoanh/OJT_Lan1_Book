@@ -97,20 +97,25 @@ public class UserController {
     }
 
     @PostMapping("/signIn")
-    public ResponseEntity<?> loginUser(@RequestBody UserLogin userLogin) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userLogin.getUserName(), userLogin.getPasswords())
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        CustomUserDetails customUserDetail = (CustomUserDetails) authentication.getPrincipal();
-        //Sinh JWT tra ve client
-        String jwt = tokenProvider.generateToken(customUserDetail);
-        //Lay cac quyen cua user
-        List<String> listRoles = customUserDetail.getAuthorities().stream()
-                .map(item -> item.getAuthority()).collect(Collectors.toList());
-        JwtResponse response = new JwtResponse(customUserDetail.getUserId(), customUserDetail.getFirstName(), customUserDetail.getLastName(), jwt, customUserDetail.getUsername(), customUserDetail.getEmail(),
-                customUserDetail.getAddress(), customUserDetail.getState(), customUserDetail.getCity(), customUserDetail.getPost(), customUserDetail.getPhone(), customUserDetail.getAvatar(), customUserDetail.getRanks(), listRoles, customUserDetail.getCarts().get(customUserDetail.getCarts().size() - 1));
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ResponseObject> loginUser(@RequestBody UserLogin userLogin) {
+        Users users = userService.findUsersByUserName(userLogin.getUserName());
+        if (users.isStatusUser()) {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(userLogin.getUserName(), userLogin.getPasswords())
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            CustomUserDetails customUserDetail = (CustomUserDetails) authentication.getPrincipal();
+            //Sinh JWT tra ve client
+            String jwt = tokenProvider.generateToken(customUserDetail);
+            //Lay cac quyen cua user
+            List<String> listRoles = customUserDetail.getAuthorities().stream()
+                    .map(item -> item.getAuthority()).collect(Collectors.toList());
+            JwtResponse response = new JwtResponse(customUserDetail.getUserId(), customUserDetail.getFirstName(), customUserDetail.getLastName(), jwt, customUserDetail.getUsername(), customUserDetail.getEmail(),
+                    customUserDetail.getAddress(), customUserDetail.getState(), customUserDetail.getCity(), customUserDetail.getPost(), customUserDetail.getPhone(), customUserDetail.getAvatar(), customUserDetail.getRanks(), listRoles, customUserDetail.getCarts().get(customUserDetail.getCarts().size() - 1));
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject("ok", "Welcome " + userLogin.getUserName(), response));
+        } else {
+            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(new ResponseObject("false", "Tài khoản " + userLogin.getUserName() + " của bạn đã bị khóa ! Vui lòng liên hệ với admin ", ""));
+        }
     }
 
     @GetMapping("/search_by_userName")
@@ -135,6 +140,7 @@ public class UserController {
             return new ResponseEntity<>(data, HttpStatus.BAD_REQUEST);
         }
     }
+
     @DeleteMapping("/block_user/{userId}")
     public ResponseEntity<?> blockUser(@PathVariable int userId) {
         try {
@@ -153,17 +159,18 @@ public class UserController {
     // dang nhap voi gg
 
     @GetMapping("/login_with_google")
-    public RedirectView loginWithGoogle(){
+    public RedirectView loginWithGoogle() {
         return new RedirectView("/login/oauth2/code/google");
     }
+
     @GetMapping("/success/profile")
     public ResponseEntity<Map<String, Object>> getUserInfo(@AuthenticationPrincipal OAuth2User principal) {
         Map<String, Object> userAttributes = principal.getAttributes();
         String name = (String) userAttributes.get("name");
         String email = (String) userAttributes.get("email");
-        userAttributes.put("name",name);
-        userAttributes.put("email",email);
-        return new ResponseEntity<>(userAttributes,HttpStatus.OK);
+        userAttributes.put("name", name);
+        userAttributes.put("email", email);
+        return new ResponseEntity<>(userAttributes, HttpStatus.OK);
     }
 
     //    ------------------    ĐĂNG KÝ   ----------------------
@@ -203,7 +210,7 @@ public class UserController {
                         Roles adminRole = null;
                         try {
                             adminRole = (Roles) roleService.findByRoleName(ERole.ROLE_ADMIN)
-                                    .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
+                                    .orElseThrow(() -> new RuntimeException("Error: Role is not found 1"));
                         } catch (Throwable e) {
                             throw new RuntimeException(e);
                         }
@@ -212,7 +219,7 @@ public class UserController {
                         Roles modRole = null;
                         try {
                             modRole = (Roles) roleService.findByRoleName(ERole.ROLE_MODERATOR)
-                                    .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
+                                    .orElseThrow(() -> new RuntimeException("Error: Role is not found 2"));
                         } catch (Throwable e) {
                             throw new RuntimeException(e);
                         }
@@ -221,7 +228,7 @@ public class UserController {
                         Roles userRole = null;
                         try {
                             userRole = (Roles) roleService.findByRoleName(ERole.ROLE_USER)
-                                    .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
+                                    .orElseThrow(() -> new RuntimeException("Error: Role is not found 3"));
                         } catch (Throwable e) {
                             throw new RuntimeException(e);
                         }
@@ -440,7 +447,6 @@ public class UserController {
         Users user = userService.findById(customUserDetails.getUserId());
         user.getWishList().add(book);
         try {
-
             userService.saveOrUpdate(user);
             return ResponseEntity.ok("Đã thêm sản phẩm vào danh mục ưa thích");
         } catch (Exception e) {
