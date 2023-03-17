@@ -41,7 +41,7 @@ public class Book {
     private boolean bookStatus;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "CatalogId")
-    private Category catalog;
+    private Category category;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "authorId", referencedColumnName = "authorId")
     private Author author;
@@ -57,12 +57,7 @@ public class Book {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable( name = "Tag_Book", joinColumns = @JoinColumn(name = "bookId"), inverseJoinColumns = @JoinColumn(name = "tagId"))
     private List<Tag> tagList= new ArrayList<>();
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "UserId")
-    private Users users;
     @OneToMany(mappedBy = "book")
     @JsonIgnore
     private List<Star> starList=new ArrayList<>();
-
 }

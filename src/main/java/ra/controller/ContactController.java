@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ra.model.entity.Contact;
 import ra.model.service.ContactService;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class ContactController {
     @Autowired private ContactService contactService;
     @GetMapping("/get_paging_and_sort")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getPagingAndSortByName(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -47,6 +49,7 @@ public class ContactController {
 
     }
     @GetMapping("/search_by_email_or_phone")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> searchByNameOrPhone(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -66,6 +69,7 @@ public class ContactController {
         }
     }
     @PostMapping("/creat_contact")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?>creatContact(@RequestBody Contact contact){
         try {
             Contact result=contactService.saveOrUpdate(contact);
@@ -75,6 +79,7 @@ public class ContactController {
         }
     }
     @PutMapping("/update/{contactId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?> updateContact(@PathVariable int contactId,@RequestBody Contact contact){
         try {
             Contact result = contactService.saveOrUpdate(contact);
@@ -84,6 +89,7 @@ public class ContactController {
         }
     }
     @DeleteMapping("/delete/{contactId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<?>deleteContact(@PathVariable int contactId){
         try{
             Contact contact =contactService.findById(contactId);

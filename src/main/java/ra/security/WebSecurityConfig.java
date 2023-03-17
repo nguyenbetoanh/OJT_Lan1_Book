@@ -66,16 +66,29 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors() // Ngăn chặn request từ một domain khác
                 .and().csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/v1/users/**").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
-                .antMatchers("/api/v1/category/**").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
-                .antMatchers("/api/v1/passReset/**").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
-                .antMatchers("/api/v1/book/**").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
-                .antMatchers("/api/v1/author/**").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
-                .antMatchers("/api/v1/likeBook/**").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
-                .antMatchers("/api/v1/contact/**").permitAll()
-                .antMatchers("/api/v1/tag/**").permitAll()
-                .antMatchers("/api/v1/cart/**").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
-                .antMatchers("/api/v1/comment/**").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
+//                User
+                .antMatchers("/api/v1/users/register").permitAll()// Cho phép tất cả mọi người truy cập vào địa chỉ này
+                .antMatchers("/api/v1/users/signIn").permitAll()
+
+//                Category
+                .antMatchers("/api/v1/category/search").permitAll()
+                .antMatchers("/api/v1/category/sortByName").permitAll()
+                .antMatchers("/api/v1/category/getPagging").permitAll()
+
+//                Reset Password
+                .antMatchers("/api/v1/passReset/**").permitAll()
+
+//                Book
+                .antMatchers("/api/v1/book/search").permitAll()
+                .antMatchers("/api/v1/book/get_pagging_and_sortBy").permitAll()
+
+//                Author
+                .antMatchers("/api/v1/author/search").permitAll()
+                .antMatchers("/api/v1/author/get_paging_and_sortBy").permitAll()
+
+//                Tag
+                .antMatchers("/api/v1/tag/search_by_name").permitAll()
+
                 .anyRequest().authenticated().and()
                 .oauth2Login()
                 .loginPage("/signIn")

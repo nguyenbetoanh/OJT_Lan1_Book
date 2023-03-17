@@ -9,4 +9,5 @@ public interface CartService  extends RootService<Carts,Integer>{
     Carts mapCartConfirmToCart(Carts carts, CartConfirm confirm);
 
     List<Carts> findByCreatDateBetween(LocalDate startDate, LocalDate endDate);
+    List<Carts>findByUsers_UserIdAndCartStatus(Integer userId,Integer cartStatus);
 }

@@ -42,6 +42,8 @@ public class Carts {
     private LocalDate creatDate;
     @Column(name= "Status")
     private int cartStatus;
+    @Column(name= "Total")
+    private float cartTotal;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "userId")
     @JsonIgnore

@@ -12,4 +12,5 @@ public interface CartDetailService extends RootService<CartDetail,Integer> {
     List<CartDetail> findByBook_BookId(int bookId);
     List<CartDetail> findByCartsIn(List<Carts> listCart);
 
+
 }
